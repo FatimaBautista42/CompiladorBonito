@@ -289,5 +289,5 @@ public class MainPanel extends javax.swing.JFrame {
     private javax.swing.JButton scanBtn;
     private javax.swing.JTextArea sourceStream;
     // End of variables declaration//GEN-END:variables
-    //1
+    //
 }
