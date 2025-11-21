@@ -13,6 +13,7 @@ public class MainPanel extends javax.swing.JFrame {
     TokenTable tokenTable;
     SymbolTable symbolTable;
     IntermediateCodeGenerator intermediateFrame;
+    ObjectCodeGenerator objectCodeFrame;
     
     public MainPanel() {
         initComponents();
@@ -30,6 +31,7 @@ public class MainPanel extends javax.swing.JFrame {
         jButton6 = new javax.swing.JButton();
         jButton4 = new javax.swing.JButton();
         jButton1 = new javax.swing.JButton();
+        jButton7 = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         sourceStream = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -99,6 +101,16 @@ public class MainPanel extends javax.swing.JFrame {
             }
         });
 
+        jButton7.setBackground(new java.awt.Color(70, 177, 204));
+        jButton7.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jButton7.setForeground(new java.awt.Color(255, 255, 255));
+        jButton7.setText("Generate Object Code");
+        jButton7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton7ActionPerformed(evt);
+            }
+        });
+
         sourceStream.setColumns(20);
         sourceStream.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         sourceStream.setRows(5);
@@ -111,18 +123,20 @@ public class MainPanel extends javax.swing.JFrame {
             .addComponent(jScrollPane2)
             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel1Layout.createSequentialGroup()
-                    .addGap(106, 106, 106)
+                    .addGap(50, 50, 50)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                         .addComponent(scanBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 331, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGroup(jPanel1Layout.createSequentialGroup()
                             .addComponent(jButton6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                             .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 19, Short.MAX_VALUE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGap(149, 149, 149)))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(jButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -134,7 +148,8 @@ public class MainPanel extends javax.swing.JFrame {
                     .addGap(395, 395, 395)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(scanBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE))
+                        .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE)
+                        .addComponent(jButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -145,9 +160,9 @@ public class MainPanel extends javax.swing.JFrame {
 
         getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, -1, -1));
 
-        jMenu1.setText("File");
+        jMenu1.setText("Archivo");
 
-        jMenuItem1.setText("New");
+        jMenuItem1.setText("Nuevo");
         jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem1ActionPerformed(evt);
@@ -155,7 +170,7 @@ public class MainPanel extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItem1);
 
-        jMenuItem2.setText("Open");
+        jMenuItem2.setText("Abrir");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem2ActionPerformed(evt);
@@ -163,10 +178,10 @@ public class MainPanel extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItem2);
 
-        jMenuItem3.setText("Exit");
+        jMenuItem3.setText("Salir");
         jMenu1.add(jMenuItem3);
 
-        jMenuItem4.setText("About");
+        jMenuItem4.setText("Acerca de");
         jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem4ActionPerformed(evt);
@@ -249,6 +264,17 @@ public class MainPanel extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(null,"Developers:\nAmmar\nManaf\nNaveed"); 
     }//GEN-LAST:event_jMenuItem4ActionPerformed
 
+    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+        // TODO add your handling code here:
+        if (this.intermediateFrame == null) {
+            JOptionPane.showMessageDialog(this, "Please scan and generate intermediate code first!");
+            return;
+        }
+        String intermediateCode = IntermediateCodeGenerator.ConvertCode(this.stream);
+        this.objectCodeFrame = new ObjectCodeGenerator(intermediateCode);
+        this.objectCodeFrame.setVisible(true);
+    }//GEN-LAST:event_jButton7ActionPerformed
+
 
     public static void main(String args[]) {
 
@@ -277,6 +303,7 @@ public class MainPanel extends javax.swing.JFrame {
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
+    private javax.swing.JButton jButton7;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
@@ -289,4 +316,5 @@ public class MainPanel extends javax.swing.JFrame {
     private javax.swing.JButton scanBtn;
     private javax.swing.JTextArea sourceStream;
     // End of variables declaration//GEN-END:variables
+    //
 }
