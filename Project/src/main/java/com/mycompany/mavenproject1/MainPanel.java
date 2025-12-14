@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -29,6 +30,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 
 public class MainPanel extends javax.swing.JFrame {
 
@@ -56,7 +58,7 @@ public class MainPanel extends javax.swing.JFrame {
         setBackground(COLOR_FONDO_PRINCIPAL);
         setForeground(new Color(100, 100, 100));
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setResizable(false);
+        setResizable(true);
     }
 
     @SuppressWarnings("unchecked")
@@ -230,6 +232,7 @@ public class MainPanel extends javax.swing.JFrame {
 
         pack();
         setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
     private JButton createPinkyButton(String text) {
