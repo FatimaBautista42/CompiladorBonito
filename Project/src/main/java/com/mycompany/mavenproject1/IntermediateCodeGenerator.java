@@ -3,6 +3,7 @@ package com.mycompany.mavenproject1;
 public class IntermediateCodeGenerator extends javax.swing.JFrame 
 {
     public static int VariableNumber = 1;
+    public static int LabelNumber = 1;
     /**
      * Creates new form Intermediate
      * @param text
@@ -66,12 +67,29 @@ public class IntermediateCodeGenerator extends javax.swing.JFrame
     // Utility Functions
     public static String ConvertCode(String text){
         VariableNumber = 1;
+        LabelNumber = 1;
         String finalCode = "";
         String[] lines = text.split("\n");
         for (String line : lines){
             line = line.trim().replaceAll(";$", ""); // Remove trailing semicolon
             if (isIgnoredLine(line)) continue; // Ignorar líneas no soportadas
-            if (isExpressionLine(line)){
+            if (isIfStatement(line)){
+                String ifCode = processIfStatement(line);
+                finalCode += ifCode + "\n";
+            }
+            else if (isWhileStatement(line)){
+                String whileCode = processWhileStatement(line);
+                finalCode += whileCode + "\n";
+            }
+            else if (isForStatement(line)){
+                String forCode = processForStatement(line);
+                finalCode += forCode + "\n";
+            }
+            else if (isFunctionDeclaration(line)){
+                String funcCode = processFunctionDeclaration(line);
+                finalCode += funcCode + "\n";
+            }
+            else if (isExpressionLine(line)){
                 String UpdatedLine = ThreeAddressCode.GenerateCode(line);
                 finalCode += UpdatedLine + "\n";
             }
@@ -100,6 +118,109 @@ public class IntermediateCodeGenerator extends javax.swing.JFrame
         else {
             return false;
         }
+    }
+    
+    private static boolean isIfStatement(String line) {
+        return line.startsWith("if");
+    }
+    
+    private static boolean isWhileStatement(String line) {
+        return line.startsWith("while");
+    }
+    
+    private static boolean isForStatement(String line) {
+        return line.startsWith("for");
+    }
+    
+    private static boolean isFunctionDeclaration(String line) {
+        return (line.contains("int ") || line.contains("double ") || line.contains("String ") || 
+                line.contains("boolean ") || line.contains("void ")) && 
+               line.contains("(") && line.contains(")") && !line.contains("=");
+    }
+    
+    private static String processIfStatement(String line) {
+        // Extraer la condición del if
+        int startParen = line.indexOf('(');
+        int endParen = line.lastIndexOf(')');
+        if (startParen == -1 || endParen == -1) return line;
+        
+        String condition = line.substring(startParen + 1, endParen).trim();
+        String label = "L" + LabelNumber++;
+        
+        // Generar código de tres direcciones para el if
+        String code = "// if " + condition + "\n";
+        code += "if " + condition + " == false goto " + label + "\n";
+        // Aquí iría el código del bloque if
+        code += label + ":";
+        
+        return code;
+    }
+    
+    private static String processWhileStatement(String line) {
+        // Extraer la condición del while
+        int startParen = line.indexOf('(');
+        int endParen = line.lastIndexOf(')');
+        if (startParen == -1 || endParen == -1) return line;
+        
+        String condition = line.substring(startParen + 1, endParen).trim();
+        String startLabel = "L" + LabelNumber++;
+        String endLabel = "L" + LabelNumber++;
+        
+        // Generar código de tres direcciones para el while
+        String code = startLabel + ":\n";
+        code += "// while " + condition + "\n";
+        code += "if " + condition + " == false goto " + endLabel + "\n";
+        // Aquí iría el código del bloque while
+        code += "goto " + startLabel + "\n";
+        code += endLabel + ":";
+        
+        return code;
+    }
+    
+    private static String processForStatement(String line) {
+        // Extraer las partes del for: inicialización, condición, incremento
+        int startParen = line.indexOf('(');
+        int endParen = line.lastIndexOf(')');
+        if (startParen == -1 || endParen == -1) return line;
+        
+        String forContent = line.substring(startParen + 1, endParen);
+        String[] parts = forContent.split(";");
+        if (parts.length != 3) return line;
+        
+        String initialization = parts[0].trim();
+        String condition = parts[1].trim();
+        String increment = parts[2].trim();
+        
+        String startLabel = "L" + LabelNumber++;
+        String endLabel = "L" + LabelNumber++;
+        
+        // Generar código de tres direcciones para el for
+        String code = "// for (" + initialization + "; " + condition + "; " + increment + ")\n";
+        code += initialization + "\n";
+        code += startLabel + ":\n";
+        code += "if " + condition + " == false goto " + endLabel + "\n";
+        // Aquí iría el código del bloque for
+        code += increment + "\n";
+        code += "goto " + startLabel + "\n";
+        code += endLabel + ":";
+        
+        return code;
+    }
+    
+    private static String processFunctionDeclaration(String line) {
+        // Extraer el nombre de la función
+        int parenIndex = line.indexOf("(");
+        String beforeParen = line.substring(0, parenIndex).trim();
+        String[] tokens = beforeParen.split("\\s+");
+        String functionName = tokens[tokens.length - 1];
+        
+        // Generar código de tres direcciones para la función
+        String code = "// Function " + functionName + "\n";
+        code += "function " + functionName + ":\n";
+        // Aquí iría el código del cuerpo de la función
+        code += "return";
+        
+        return code;
     }
     
     private static boolean isIgnoredLine(String line) {

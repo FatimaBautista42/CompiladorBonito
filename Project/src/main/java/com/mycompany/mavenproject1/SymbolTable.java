@@ -1,4 +1,7 @@
 package com.mycompany.mavenproject1;
+import java.util.List;
+import java.util.Map;
+
 import javax.swing.table.DefaultTableModel;
 
 public class SymbolTable extends javax.swing.JFrame {
@@ -53,4 +56,143 @@ public class SymbolTable extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
     // End of variables declaration//GEN-END:variables
+    
+    /**
+     * Llena la tabla visual de símbolos con la información del análisis léxico
+     */
+    public void fillSymbolTableForm(Map<String, List<String>> symbolTable, String sourceCode) {
+        model.setRowCount(0); // Limpiar tabla
+        
+        String[] lines = sourceCode.split("\n");
+        int lineNumber = 1;
+        
+        for (String line : lines) {
+            line = line.trim();
+            if (!line.isEmpty()) {
+                // Buscar declaraciones de variables: tipo nombre = valor;
+                if (isVariableDeclaration(line)) {
+                    String[] parts = extractVariableDeclaration(line);
+                    if (parts != null) {
+                        model.addRow(new Object[]{lineNumber, "Variable", parts[1], parts[0]});
+                    }
+                }
+                
+                // Buscar declaraciones de funciones: tipo nombre(parámetros)
+                if (isFunctionDeclaration(line)) {
+                    String[] parts = extractFunctionDeclaration(line);
+                    if (parts != null) {
+                        model.addRow(new Object[]{lineNumber, "Función", parts[1], parts[0]});
+                    }
+                }
+                
+                // Buscar arreglos: tipo[] nombre = new tipo[tamaño];
+                if (isArrayDeclaration(line)) {
+                    String[] parts = extractArrayDeclaration(line);
+                    if (parts != null) {
+                        model.addRow(new Object[]{lineNumber, "Arreglo", parts[1], parts[0] + "[]"});
+                    }
+                }
+            }
+            lineNumber++;
+        }
+    }
+    
+    /**
+     * Verifica si una línea contiene una declaración de variable
+     */
+    private boolean isVariableDeclaration(String line) {
+        return (line.contains("int ") || line.contains("double ") || line.contains("String ") || 
+                line.contains("boolean ")) && line.contains("=") && !line.contains("(");
+    }
+    
+    /**
+     * Extrae información de una declaración de variable: tipo nombre = valor
+     * Retorna: [tipo, nombre]
+     */
+    private String[] extractVariableDeclaration(String line) {
+        try {
+            String[] tokens = line.replace(";", "").trim().split("\\s+");
+            if (tokens.length >= 3 && tokens[1].equals("=")) {
+                // Caso: int a = 5;
+                return new String[]{tokens[0], tokens[2]};
+            } else if (tokens.length >= 2) {
+                // Caso: int a;
+                String type = tokens[0];
+                String name = tokens[1].replace(";", "");
+                return new String[]{type, name};
+            }
+        } catch (Exception e) {
+            // Error en el parsing
+        }
+        return null;
+    }
+    
+    /**
+     * Verifica si una línea contiene una declaración de función
+     */
+    private boolean isFunctionDeclaration(String line) {
+        return (line.contains("int ") || line.contains("double ") || line.contains("String ") || 
+                line.contains("boolean ") || line.contains("void ")) && 
+               line.contains("(") && line.contains(")") && !line.contains("=");
+    }
+    
+    /**
+     * Extrae información de una declaración de función: tipo nombre(parámetros)
+     * Retorna: [tipo, nombre]
+     */
+    private String[] extractFunctionDeclaration(String line) {
+        try {
+            int parenIndex = line.indexOf("(");
+            String beforeParen = line.substring(0, parenIndex).trim();
+            String[] tokens = beforeParen.split("\\s+");
+            
+            if (tokens.length >= 2) {
+                String type = tokens[tokens.length - 2];
+                String name = tokens[tokens.length - 1];
+                return new String[]{type, name};
+            }
+        } catch (Exception e) {
+            // Error en el parsing
+        }
+        return null;
+    }
+    
+    /**
+     * Verifica si una línea contiene una declaración de arreglo
+     */
+    private boolean isArrayDeclaration(String line) {
+        return (line.contains("int[") || line.contains("double[") || line.contains("String[") || 
+                line.contains("boolean[")) || line.contains("new ");
+    }
+    
+    /**
+     * Extrae información de una declaración de arreglo
+     * Retorna: [tipo, nombre]
+     */
+    private String[] extractArrayDeclaration(String line) {
+        try {
+            if (line.contains("new ")) {
+                // Caso: int[] arr = new int[5];
+                int newIndex = line.indexOf("new ");
+                String beforeNew = line.substring(0, newIndex).trim();
+                String[] tokens = beforeNew.split("\\s+");
+                if (tokens.length >= 2) {
+                    String type = tokens[0].replace("[]", "");
+                    String name = tokens[1];
+                    return new String[]{type, name};
+                }
+            } else if (line.contains("[")) {
+                // Caso: int[] arr;
+                String[] tokens = line.replace(";", "").trim().split("\\s+");
+                if (tokens.length >= 1) {
+                    String type = tokens[0].replace("[]", "");
+                    String name = tokens[1].replace("[]", "");
+                    return new String[]{type, name};
+                }
+            }
+        } catch (Exception e) {
+            // Error en el parsing
+        }
+        return null;
+    }
 }

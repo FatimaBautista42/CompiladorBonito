@@ -7,44 +7,48 @@ import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
 import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class MainPanel extends javax.swing.JFrame {
 
-    LexemeGenerator lex;
     String stream;
     TokenTable tokenTable;
     SymbolTable symbolTable;
     IntermediateCodeGenerator intermediateFrame;
     ObjectCodeGenerator objectCodeFrame;
+    ExecutionEngine executionEngine;
     
     // Colores PinkyLab
     private static final Color COLOR_FONDO_PRINCIPAL = new Color(255, 255, 255);//Blanco puro
     private static final Color COLOR_BOTON = new Color(255, 182, 210);// Rosa kawaii
     private static final Color COLOR_BOTON_BORDE = new Color(255, 150, 200);// Rosa fuerte
+    
+    // Simulación de entrada/salida
+    private final java.util.Map<String, Integer> simulatedVariables = new java.util.HashMap<>();
+    private javax.swing.JTextArea consoleArea;
+    private javax.swing.JScrollPane consoleScrollPane;
     
     public MainPanel() {
         initComponents();
@@ -61,7 +65,6 @@ public class MainPanel extends javax.swing.JFrame {
         setResizable(true);
     }
 
-    @SuppressWarnings("unchecked")
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
@@ -105,46 +108,22 @@ public class MainPanel extends javax.swing.JFrame {
         buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 10));
 
         scanBtn = createPinkyButton("Analizar");
-        scanBtn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                scanBtnActionPerformed(evt);
-            }
-        });
+        scanBtn.addActionListener(e -> scanBtnActionPerformed());
 
         jButton5 = createPinkyButton("Código Intermedio");
-        jButton5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton5ActionPerformed(evt);
-            }
-        });
+        jButton5.addActionListener(e -> jButton5ActionPerformed());
 
         jButton6 = createPinkyButton("Formato");
-        jButton6.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton6ActionPerformed(evt);
-            }
-        });
+        jButton6.addActionListener(e -> jButton6ActionPerformed());
 
         jButton4 = createPinkyButton("Tabla de Símbolos");
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
-            }
-        });
+        jButton4.addActionListener(e -> jButton4ActionPerformed());
 
         jButton1 = createPinkyButton("Ver Tokens");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
+        jButton1.addActionListener(e -> jButton1ActionPerformed());
 
         jButton7 = createPinkyButton("Código Objeto");
-        jButton7.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton7ActionPerformed(evt);
-            }
-        });
+        jButton7.addActionListener(e -> jButton7ActionPerformed());
 
         buttonPanel.add(scanBtn);
         buttonPanel.add(jButton5);
@@ -175,12 +154,21 @@ public class MainPanel extends javax.swing.JFrame {
         jPanel1.add(headerPanel, BorderLayout.NORTH);
         jPanel1.add(jScrollPane2, BorderLayout.CENTER);
         
+        // Inicializar consola falsa
+        initializeConsole();
+        
         JPanel southPanel = new JPanel(new BorderLayout());
         southPanel.setBackground(COLOR_FONDO_PRINCIPAL);
         southPanel.add(centerPanel, BorderLayout.CENTER);
         southPanel.add(buttonPanel, BorderLayout.SOUTH);
         
-        jPanel1.add(southPanel, BorderLayout.SOUTH);
+        // Panel inferior con botones y consola
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setBackground(COLOR_FONDO_PRINCIPAL);
+        bottomPanel.add(southPanel, BorderLayout.NORTH);
+        bottomPanel.add(consoleScrollPane, BorderLayout.CENTER);
+        
+        jPanel1.add(bottomPanel, BorderLayout.SOUTH);
 
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(jPanel1, BorderLayout.CENTER);
@@ -197,30 +185,18 @@ public class MainPanel extends javax.swing.JFrame {
         jMenu1.setText("Archivo");
 
         jMenuItem1.setText("Nuevo");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
-            }
-        });
+        jMenuItem1.addActionListener(e -> jMenuItem1ActionPerformed());
         jMenu1.add(jMenuItem1);
 
         jMenuItem2.setText("Abrir");
-        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem2ActionPerformed(evt);
-            }
-        });
+        jMenuItem2.addActionListener(e -> jMenuItem2ActionPerformed());
         jMenu1.add(jMenuItem2);
 
         jMenuItem3.setText("Salir");
         jMenu1.add(jMenuItem3);
 
         jMenuItem4.setText("Acerca de");
-        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem4ActionPerformed(evt);
-            }
-        });
+        jMenuItem4.addActionListener(e -> jMenuItem4ActionPerformed());
         jMenu1.add(jMenuItem4);
 
         jMenuBar1.add(jMenu1);
@@ -252,31 +228,275 @@ public class MainPanel extends javax.swing.JFrame {
         return button;
     }
 
-    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+    // ==========================================
+    // SIMULACIÓN DE ENTRADA/SALIDA
+    // ==========================================
+    
+    /**
+     * Procesa las líneas de entrada simulada (sc.nextInt())
+     * Busca patrones como: int variable = sc.nextInt();
+     */
+    private void processInputStatements(String code) {
+        simulatedVariables.clear(); // Limpiar variables anteriores
+        
+        String[] lines = code.split("\n");
+        for (String line : lines) {
+            line = line.trim();
+            if (isInputStatement(line)) {
+                String variableName = extractVariableName(line);
+                if (variableName != null) {
+                    simulateInput(variableName);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Verifica si una línea contiene una llamada a sc.nextInt()
+     */
+    private boolean isInputStatement(String line) {
+        // Más flexible: busca sc.nextInt() en cualquier parte de la línea
+        return line.contains("sc.nextInt()") && line.contains("int") && line.contains("=");
+    }
+    
+    /**
+     * Extrae el nombre de la variable de una línea como: int a = sc.nextInt();
+     */
+    private String extractVariableName(String line) {
+        try {
+            // Buscar el patrón más flexible: cualquier cosa entre "int " y " = "
+            int intIndex = line.indexOf("int ");
+            int equalsIndex = line.indexOf("=");
+            
+            if (intIndex >= 0 && equalsIndex > intIndex) {
+                String variablePart = line.substring(intIndex + 4, equalsIndex).trim();
+                // Limpiar espacios y caracteres no deseados
+                variablePart = variablePart.replaceAll("\\s+", "");
+                return variablePart;
+            }
+        } catch (Exception e) {
+            // Si hay error en el parsing, ignorar
+        }
+        return null;
+    }
+    
+    /**
+     * Simula la entrada pidiendo un valor al usuario
+     */
+    private void simulateInput(String variableName) {
+        try {
+            String input = JOptionPane.showInputDialog(
+                this,
+                "Ingresa un valor entero para la variable '" + variableName + "':",
+                "Simulación de Entrada - PinkyLab",
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if (input != null && !input.trim().isEmpty()) {
+                int value = Integer.parseInt(input.trim());
+                simulatedVariables.put(variableName, value);
+                
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Variable '" + variableName + "' = " + value + " asignada correctamente.",
+                    "Entrada Simulada",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Error: Debes ingresar un número entero válido.",
+                "Error de Entrada",
+                JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+    
+    /**
+     * Inicializa la consola falsa
+     */
+    private void initializeConsole() {
+        consoleArea = new javax.swing.JTextArea();
+        consoleArea.setEditable(false);
+        consoleArea.setBackground(new Color(20, 20, 20));
+        consoleArea.setForeground(Color.GREEN);
+        consoleArea.setFont(new Font("Consolas", Font.PLAIN, 12));
+        consoleArea.setText("""
+PinkyLab Console - Simulación de Salida
+=====================================
+
+""");
+        
+        consoleScrollPane = new javax.swing.JScrollPane(consoleArea);
+        consoleScrollPane.setPreferredSize(new Dimension(400, 150));
+        consoleScrollPane.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(COLOR_BOTON_BORDE, 2),
+            "Consola PinkyLab",
+            javax.swing.border.TitledBorder.CENTER,
+            javax.swing.border.TitledBorder.TOP,
+            new Font("Segoe UI", Font.BOLD, 12),
+            COLOR_BOTON_BORDE
+        ));
+    }
+    
+    /**
+     * Procesa las líneas de salida simulada (System.out.print/println)
+     */
+    private void processOutputStatements(String code) {
+        if (consoleArea == null) {
+            initializeConsole();
+        }
+        
+        clearConsole();
+        
+        String[] lines = code.split("\n");
+        for (String line : lines) {
+            line = line.trim();
+            if (isOutputStatement(line)) {
+                String output = extractOutputContent(line);
+                if (output != null) {
+                    String result = evaluateOutputExpression(output);
+                    appendToConsole(result);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Verifica si una línea contiene System.out.print o println
+     */
+    private boolean isOutputStatement(String line) {
+        // Más flexible: busca System.out.print o System.out.println
+        return (line.contains("System.out.print(") || line.contains("System.out.println(")) && 
+               (line.contains("\"") || line.contains("+"));
+    }
+    
+    /**
+     * Extrae el contenido dentro de System.out.print/println
+     */
+    private String extractOutputContent(String line) {
+        try {
+            // Buscar el contenido entre paréntesis
+            int startParen = line.indexOf("(");
+            int endParen = line.lastIndexOf(")");
+            
+            if (startParen >= 0 && endParen > startParen) {
+                String content = line.substring(startParen + 1, endParen);
+                return content;
+            }
+        } catch (Exception e) {
+            // Si hay error en el parsing, ignorar
+        }
+        return null;
+    }
+    
+    /**
+     * Evalúa expresiones simples dentro del output (solo sumas por ahora)
+     */
+    private String evaluateOutputExpression(String expression) {
+        // Si no hay variables simuladas, devolver la expresión tal cual
+        if (simulatedVariables.isEmpty()) {
+            return expression;
+        }
+        
+        String result = expression;
+        
+        // Reemplazar variables individuales primero
+        for (String varName : simulatedVariables.keySet()) {
+            Integer value = simulatedVariables.get(varName);
+            if (value != null) {
+                // Reemplazar la variable por su valor
+                result = result.replaceAll("\\b" + varName + "\\b", value.toString());
+            }
+        }
+        
+        // Evaluar expresiones matemáticas simples (solo sumas por ahora)
+        result = evaluateSimpleMath(result);
+        
+        return result;
+    }
+    
+    /**
+     * Evalúa expresiones matemáticas simples (solo sumas)
+     */
+    private String evaluateSimpleMath(String expression) {
+        try {
+            // Buscar patrones como: (5 + 3), 5 + 3, etc.
+            if (expression.contains("+")) {
+                // Remover paréntesis si los hay
+                String mathExpr = expression.trim();
+                if (mathExpr.startsWith("(") && mathExpr.endsWith(")")) {
+                    mathExpr = mathExpr.substring(1, mathExpr.length() - 1);
+                }
+                
+                // Evaluar suma simple
+                String[] parts = mathExpr.split("\\+");
+                if (parts.length == 2) {
+                    int num1 = Integer.parseInt(parts[0].trim());
+                    int num2 = Integer.parseInt(parts[1].trim());
+                    int sum = num1 + num2;
+                    
+                    // Reemplazar en la expresión original
+                    return expression.replace("(" + mathExpr + ")", String.valueOf(sum))
+                                   .replace(mathExpr, String.valueOf(sum));
+                }
+            }
+        } catch (NumberFormatException e) {
+            // Si hay error en la evaluación matemática, devolver original
+        }
+        
+        return expression;
+    }
+    
+    /**
+     * Agrega texto a la consola falsa
+     */
+    private void appendToConsole(String text) {
+        if (consoleArea != null) {
+            consoleArea.append(text + "\n");
+        }
+    }
+    
+    /**
+     * Limpia la consola falsa
+     */
+    private void clearConsole() {
+        if (consoleArea != null) {
+            consoleArea.setText("""
+PinkyLab Console - Simulación de Salida
+=====================================
+
+""");
+        }
+    }
+
+    private void jMenuItem1ActionPerformed() {
         this.sourceStream.setText("");
         this.stream = "";
-    }//GEN-LAST:event_jMenuItem1ActionPerformed
+        // Limpiar variables simuladas y consola
+        simulatedVariables.clear();
+        clearConsole();
+    }
 
-    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+    private void jMenuItem2ActionPerformed() {
         // TODO add your handling code here:
         FileDialog dialog = new FileDialog((Frame) null, "Select File to Open");
         dialog.setDirectory("C://");
         dialog.setMode(FileDialog.LOAD);
         dialog.setVisible(true);
         String file = dialog.getDirectory() + dialog.getFile();
-        FileReader fr;
-        try {
-            fr = new FileReader(file);
-            BufferedReader br = new BufferedReader(fr);
-            String s = "";
+        try (FileReader fr = new FileReader(file);
+             BufferedReader br = new BufferedReader(fr)) {
             String text = "";
+            String s;
             while((s = br.readLine()) != null)
                 text += s + "\n";
             this.sourceStream.setText(text);
         } catch(IOException e) {}
-    }//GEN-LAST:event_jMenuItem2ActionPerformed
+    }
 
-    private void scanBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_scanBtnActionPerformed
+    private void scanBtnActionPerformed() {
         // TODO add your handling code here:
         this.tokenTable = new TokenTable();
         this.symbolTable = new SymbolTable();
@@ -288,35 +508,40 @@ public class MainPanel extends javax.swing.JFrame {
         }
         this.intermediateFrame = new IntermediateCodeGenerator(text);
         this.stream = text;
-        this.lex = new LexemeGenerator(this.stream, this.tokenTable, this.symbolTable);
-        new ScanProgressBar();
-    }//GEN-LAST:event_scanBtnActionPerformed
+        
+        // NUEVO: Procesar simulación de entrada y salida después del análisis
+        processInputStatements(text);
+        processOutputStatements(text);
+        
+        // NUEVO: Ejecutar simulación semántica
+        executeSemanticSimulation(text);
+    }
 
-    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+    private void jButton5ActionPerformed() {
         // TODO add your handling code here:
         intermediateFrame.setVisible(true);
-    }//GEN-LAST:event_jButton5ActionPerformed
+    }
 
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+    private void jButton6ActionPerformed() {
         // TODO add your handling code here:
         sourceStream.setText(IntermediateCodeGenerator.performFormat(sourceStream.getText()));
-    }//GEN-LAST:event_jButton6ActionPerformed
+    }
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+    private void jButton4ActionPerformed() {
         // TODO add your handling code here:
         this.symbolTable.setVisible(true);
-    }//GEN-LAST:event_jButton4ActionPerformed
+    }
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jButton1ActionPerformed() {
         this.tokenTable.setVisible(true);
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }
 
-    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+    private void jMenuItem4ActionPerformed() {
         // TODO add your handling code here:
         JOptionPane.showMessageDialog(null,"Developers:\nAmmar\nManaf\nNaveed"); 
-    }//GEN-LAST:event_jMenuItem4ActionPerformed
+    }
 
-    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+    private void jButton7ActionPerformed() {
         // TODO add your handling code here:
         if (this.intermediateFrame == null) {
             JOptionPane.showMessageDialog(this, "Please scan and generate intermediate code first!");
@@ -325,7 +550,7 @@ public class MainPanel extends javax.swing.JFrame {
         String intermediateCode = IntermediateCodeGenerator.ConvertCode(this.stream);
         this.objectCodeFrame = new ObjectCodeGenerator(intermediateCode);
         this.objectCodeFrame.setVisible(true);
-    }//GEN-LAST:event_jButton7ActionPerformed
+    }
 
 
     public static void main(String args[]) {
@@ -371,7 +596,7 @@ public class MainPanel extends javax.swing.JFrame {
     
     // Clase interna para mostrar números de línea
     private class LineNumberPanel extends JComponent implements DocumentListener {
-        private javax.swing.JTextArea textArea;
+        private final javax.swing.JTextArea textArea;
         private int lineCount = 0;
         
         public LineNumberPanel(javax.swing.JTextArea textArea) {
@@ -427,6 +652,29 @@ public class MainPanel extends javax.swing.JFrame {
         @Override
         public void changedUpdate(DocumentEvent e) {
             updateLineCount();
+        }
+    }
+    
+    /**
+     * Ejecuta la simulación semántica del programa compilado
+     */
+    private void executeSemanticSimulation(String sourceCode) {
+        try {
+            // Generar código intermedio
+            String intermediateCode = IntermediateCodeGenerator.ConvertCode(sourceCode);
+            
+            // Crear motor de ejecución
+            this.executionEngine = new ExecutionEngine();
+            
+            // Ejecutar el código
+            String executionResult = executionEngine.execute(intermediateCode);
+            
+            // Mostrar resultados en la consola simulada
+            appendToConsole("\n=== RESULTADOS DE EJECUCIÓN ===\n");
+            appendToConsole(executionResult);
+            
+        } catch (Exception e) {
+            appendToConsole("ERROR en ejecución semántica: " + e.getMessage() + "\n");
         }
     }
 }

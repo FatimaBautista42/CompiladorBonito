@@ -29,8 +29,26 @@ public class ThreeAddressCode
             c = inputString.charAt(i);
             if (c == '(') {
                 operatorStack.push(c);
-            }else if(c == ';' || c == '{' || c == '}' || c == '[' || c == ']' || c == '.'){
+            }else if(c == ';' || c == '{' || c == '}' || c == '.'){
                 continue;
+            }
+            else if (c == '[') {
+                // Manejar acceso a arrays: array[index]
+                String arrayAccess = "";
+                int bracketCount = 1;
+                i++; // Saltar el [
+                for (int j = i; j < inputString.length() && bracketCount > 0; j++) {
+                    if (inputString.charAt(j) == '[') bracketCount++;
+                    else if (inputString.charAt(j) == ']') bracketCount--;
+                    
+                    if (bracketCount > 0) {
+                        arrayAccess += inputString.charAt(j);
+                    } else {
+                        i = j; // Actualizar índice principal
+                        break;
+                    }
+                }
+                expressionStack.push(new Node('#', "array[" + arrayAccess + "]"));
             }
             else if (Character.isDigit(c)) {
                 if (i<inputString.length()-1 && Character.isDigit(inputString.charAt(i+1))){

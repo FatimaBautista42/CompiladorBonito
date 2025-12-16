@@ -9,28 +9,11 @@ import java.util.Scanner;
 
 public class LexemeGenerator {
     String sourceStream;
-    Scanner reader;
     ArrayList<String> lines;
     int tempIndex;
     Map<String, List<String>> symbolTable;
-    int numOfBlankLines = 0;
     TokenTable tokenTable;
     SymbolTable symbolTableForm;
-    
-    LexemeGenerator(String sourceStream, TokenTable tokenTable, SymbolTable symbolTableForm) {
-        this.sourceStream = sourceStream;
-        reader = new Scanner(sourceStream);
-        lines = new ArrayList<>();
-        symbolTable = new HashMap<>();
-        this.symbolTableForm = symbolTableForm;
-        this.tokenTable = tokenTable;
-        
-        readLines();
-        fillSymbolTable();
-        fillSymbolTableForm();  // Llenar la tabla de símbolos visual
-        System.out.println(this.getLines());
-        fillTokenTable();
-    }
     
     private void readLines() {
         String[] lineArray = sourceStream.split("\n");
@@ -51,7 +34,7 @@ public class LexemeGenerator {
         List<String> operators = getOperators(lines);                
         this.symbolTable.put("Math Operators", operators); 
         
-        List<String> logical = getLogiOperators(lines);        
+        List<String> logical = getLogiOperators();        
         this.symbolTable.put("Logical Operators", logical);
         
         String [] linesArray = lines.toArray(new String [0]);
@@ -97,7 +80,7 @@ public class LexemeGenerator {
         this.symbolTable.put("Others", others);
     }
     
-    public List getLines() {
+    public List<String> getLines() {
         return this.lines;
     }
     
@@ -138,10 +121,9 @@ public class LexemeGenerator {
     }
 
     private int insertLiteral(String token, int lineNumber, int i) {
-        int idx = 1;
         String remaining = "";
         if (token.contains("(")) {
-            idx = token.indexOf("(");
+            int idx = token.indexOf("(");
             String id = token.substring(0, idx);
             remaining = token.substring(idx + 2, token.length());
             InsertToken(id, lineNumber, i);
@@ -162,7 +144,7 @@ public class LexemeGenerator {
             insertDataPoint(lineNumber, "Keyword", returnedStr);
         else if((returnedStr = this.isOperator(token)) != null) 
             insertDataPoint(lineNumber, "Operator", returnedStr);
-        else if((returnedStr = this.isLogiOperator(token)) != null) 
+        else if((returnedStr = this.isLogiOperator()) != null) 
             insertDataPoint(lineNumber, "Logical Operator", returnedStr);
         else if(isDigit(token)) 
             insertDataPoint(lineNumber, "Numeric", token);
@@ -189,106 +171,63 @@ public class LexemeGenerator {
     }
     
     private static void addKeyword(ArrayList<String> lines, List<String> keywords, String keyword) {
-        int index = 0;
-        index = lines.indexOf(keyword);   
+        int index = lines.indexOf(keyword);   
         keywords.add(lines.get(index));
     }
 
     private static void addOp(ArrayList<String> lines, List<String> operators, String op) {
-        int index = 0;
-        index = lines.indexOf(op);   
+        int index = lines.indexOf(op);   
         operators.add(lines.get(index));
     }
 
-    private static void addLogiOp(ArrayList<String> lines, List<String> logical, String logiOp) {
-        int index = 0;
-        index = lines.indexOf(logiOp);   
-        logical.add(lines.get(index));
-    }
-
     private static List<String> getKeywords(ArrayList<String> lines) {
-        List<String> keywords = new ArrayList<String>(); 
-        if (lines.contains("int") || lines.contains("float") 
-        || lines.contains("if") || lines.contains("else") 
-        || lines.contains("public") || lines.contains("class")) {         
-            if (lines.contains("public"))
-                addKeyword(lines, keywords, "public");
-            if (lines.contains("class"))
-                addKeyword(lines, keywords, "class");
-            if (lines.contains("int")) 
-                addKeyword(lines, keywords, "int");  
-            if (lines.contains("float")) 
-                addKeyword(lines, keywords, "float");  
-            if (lines.contains("if")) 
-                addKeyword(lines, keywords, "if");
-            if (lines.contains("else"))     
-                addKeyword(lines, keywords, "else");           
-        } 
+        List<String> keywords = new ArrayList<String>();
+        // Solo tipo de dato soportado en el subconjunto
+        if (lines.contains("int")) {
+            addKeyword(lines, keywords, "int");
+        }
         return keywords;
     }
 
     private static List<String> getOperators(ArrayList<String> lines) {
-    	List<String> operators = new ArrayList<String>();        
-        if (lines.contains("=") || lines.contains("-") || lines.contains("+") || lines.contains("*")) {         
-            if (lines.contains("=")) 
-                addOp(lines, operators, "=");              
-            if (lines.contains("-")) 
-                addOp(lines, operators, "-");          
-            if (lines.contains("+")) 
-                addOp(lines, operators, "+");              
-            if (lines.contains("*")) 
-                addOp(lines, operators, "*");                        
+    	List<String> operators = new ArrayList<String>();
+        // Operadores aritméticos del subconjunto
+        if (lines.contains("+") || lines.contains("-") || lines.contains("*") || lines.contains("/")) {
+            if (lines.contains("+"))
+                addOp(lines, operators, "+");
+            if (lines.contains("-"))
+                addOp(lines, operators, "-");
+            if (lines.contains("*"))
+                addOp(lines, operators, "*");
+            if (lines.contains("/"))
+                addOp(lines, operators, "/");
         }
-        return operators;   
+        return operators;
     }
 
-    private static List<String> getLogiOperators(ArrayList<String> lines) {
-        List<String> logical = new ArrayList<String>(); 
-        if (lines.contains("<") || lines.contains(">") || lines.contains("<=") || lines.contains(">=")) {         
-            if (lines.contains("<")) 
-                addLogiOp(lines, logical, "<");
-            if (lines.contains(">")) 
-                addLogiOp(lines, logical, ">");
-            if (lines.contains("<=")) 
-                addLogiOp(lines, logical, "<=");
-            if (lines.contains(">=")) 
-                addLogiOp(lines, logical, ">=");        
-        } 
-        return logical;
+    private static List<String> getLogiOperators() {
+        // El subconjunto básico no incluye operadores lógicos o de comparación
+        return new ArrayList<>();
     }
     
     private String isKeyword(String token) {
         if(token.equals("int")) return "int";
-        if(token.equals("float")) return "float";
-        if(token.equals("if")) return "if";
-        if(token.equals("else")) return "else";
-        if(token.equals("public")) return "public";
-        if(token.equals("class")) return "class";
-        if(token.equals("void")) return "void";
-        if(token.equals("double")) return "double";
-        if(token.equals("String")) return "String";
-        if(token.equals("static")) return "static";
         return null;
     }
     
     private String isOperator(String token) {
-        if(token.equals("+")) return "+";
-        else if(token.equals("-")) return "-";
-        else if(token.equals("*")) return "*";
-        else if(token.equals("/")) return "/";
-        else if(token.equals("%")) return "%";
-        else if(token.equals("=")) return "=";
-        else return null;
+        return switch (token) {
+            case "+" -> "+";
+            case "-" -> "-";
+            case "*" -> "*";
+            case "/" -> "/";
+            default -> null;
+        };
     }
     
-    private String isLogiOperator(String token) {
-        if(token.equals("<")) return "<";
-        else if(token.equals(">")) return ">";
-        else if(token.equals("<=")) return "<=";
-        else if(token.equals(">=")) return ">=";
-        else if(token.equals("==")) return "==";
-        else if(token.equals("!=")) return "!=";
-        else return null;
+    private String isLogiOperator() {
+        // El subconjunto básico no incluye operadores lógicos
+        return null;
     }
     
     private boolean isDigit(String token) {
